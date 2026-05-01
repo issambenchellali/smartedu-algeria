@@ -243,7 +243,6 @@ def show_login():
     # 3. حاوية الدخول
     col_center = st.columns([1, 2, 1])
     with col_center[1]:
-        st.markdown("<div class='lms-card' style='text-align: center;'>", unsafe_allow_html=True)
         st.markdown("<h1 style='color: #006241;'>مرحباً بعودتك 🇩🇿</h1>", unsafe_allow_html=True)
         
         tab_login, tab_signup = st.tabs(["🔐 تسجيل الدخول", "📝 إنشاء حساب"])
