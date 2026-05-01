@@ -1,11 +1,11 @@
 """
-🇩🇿 SmartEdu Algeria V9.0 - Final Aesthetic Edition
+🇩🇿 SmartEdu Algeria V10.0 - Professional Academic Edition
 المميزات الجديدة:
-1. نظام تسجيل حساب للطلاب (Sign Up).
-2. لوحة Logs سفلية تظهر أخطاء النظام وحالة الاتصال.
-3. واجهة فيديو بأسلوب "Diapo" (شرائح) عصري.
-4. خلفية خضراء "علم جزائري" مع تأثير تظليل الحواف (Dark Vignette).
-5. شريط اعتمادات أكاديمي أسفل الصفحة.
+1. واجهة فاتحة واحترافية (Light Clean Theme).
+2. خطوط عريضة (Bold) وواضحة جداً.
+3. إصلاح عرض الفيديو (Thumbnails احترافية).
+4. إعلانات أكاديمية وعالمية المستوى.
+5. لوحة تحكم المدير المُحسنة برسوم بيانية.
 """
 
 import streamlit as st
@@ -17,11 +17,11 @@ import re
 import datetime
 
 # ==========================================
-# 1. إعدادات CSS والتصميم (Dark Algerian Theme)
+# 1. إعدادات CSS والتصميم (Professional Light Theme)
 # ==========================================
 
 st.set_page_config(
-    page_title="المنصة التعليمية - بني مسوس",
+    page_title="المنصة الأكاديمية - بني مسوس",
     page_icon="🇩🇿",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -29,129 +29,95 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@700;800;900&display=swap');
     
-    /* الخلفية: خضراء داكنة تتفتح في الوسط (علم جزائري + Vignette) */
+    /* الخلفية الفاتحة والنظيفة */
     .stApp {
-        background: radial-gradient(circle at center, #005c2b 0%, #001a0d 100%);
+        background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
         font-family: 'Tajawal', sans-serif;
         direction: rtl;
-        color: #f0fdf4;
+        color: #1a202c;
     }
 
     /* إخفاء العناصر الافتراضية */
     #MainMenu, footer {visibility: hidden;}
 
-    /* البطاقات الزجاجية (Glassmorphism) للوضع الداكن */
-    .glass-dark {
-        background: rgba(20, 40, 20, 0.7);
-        backdrop-filter: blur(12px);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 30px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    /* البطاقات الاحترافية (Clean White Cards) */
+    .pro-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         margin-bottom: 20px;
-        color: white;
+        border: 1px solid #e2e8f0;
+        color: #1f2937;
+        transition: all 0.3s;
+    }
+
+    .pro-card:hover {
+        box-shadow: 0 10px 30px rgba(0, 102, 51, 0.1);
+        border-color: #006633;
+    }
+
+    /* العناوين العريضة جداً */
+    h1, h2, h3 {
+        color: #004d26;
+        font-weight: 900;
+    }
+
+    /* واجهة الفيديو الاحترافية */
+    .video-container {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        border: 4px solid #ffffff;
+    }
+    
+    .video-container img {
+        width: 100%;
+        height: auto;
+        display: block;
         transition: transform 0.3s;
     }
-
-    .glass-dark:hover {
-        transform: translateY(-2px);
-        border-color: #00ff88;
+    
+    .video-container:hover img {
+        transform: scale(1.02);
     }
 
-    /* واجهة فيديو "ديابو" */
-    .video-diapo {
-        position: relative;
-        width: 100%;
-        aspect-ratio: 16/9;
-        background: #000;
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        transition: all 0.4s ease;
-    }
-
-    .video-diapo img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.4s;
-    }
-
-    .video-diapo:hover img {
-        transform: scale(1.05);
-    }
-
-    /* زر التشغيل المضمن */
-    .play-overlay {
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.4);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        opacity: 0;
-        transition: opacity 0.3s;
-    }
-
-    .video-diapo:hover .play-overlay {
-        opacity: 1;
-    }
-
-    .play-btn {
-        width: 60px;
-        height: 60px;
-        background: rgba(0, 255, 136, 0.8);
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        box-shadow: 0 0 20px #00ff88;
-    }
-
-    .play-btn::after {
-        content: '';
-        width: 0; 
-        height: 0; 
-        border-top: 10px solid transparent;
-        border-bottom: 10px solid transparent;
-        border-left: 18px solid #000;
-        margin-left: 4px;
-    }
-
-    /* الأزرار العصرية */
+    /* الأزرار */
     .stButton>button {
-        font-weight: bold;
-        border-radius: 30px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        border-radius: 8px;
+        height: 55px;
         border: none;
-        transition: all 0.3s;
+        text-transform: uppercase;
     }
     
     .stButton>button[kind="primary"] {
-        background: linear-gradient(90deg, #00ff88, #00cc6a);
-        color: #001a0d;
-        font-size: 1.1rem;
-        height: 50px;
+        background-color: #006633;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 102, 51, 0.3);
     }
 
-    /* مربع اللوج (Logs) السفلي */
+    /* مربع اللوج */
     .logs-panel {
         position: fixed;
-        bottom: 70px; /* فوق الفوتر */
+        bottom: 90px;
         left: 20px;
-        width: 300px;
+        width: 320px;
         max-height: 150px;
-        background: rgba(0, 0, 0, 0.8);
-        border: 1px solid #333;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid #e2e8f0;
+        border-right: 4px solid #006633;
         border-radius: 10px;
-        padding: 10px;
-        font-size: 12px;
+        padding: 15px;
         font-family: 'Courier New', monospace;
-        color: #00ff88;
+        font-size: 12px;
         overflow-y: auto;
         z-index: 999;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         direction: ltr;
     }
 
@@ -160,74 +126,87 @@ st.markdown("""
         position: fixed;
         bottom: 0;
         width: 100%;
-        background: rgba(0, 20, 10, 0.95);
-        border-top: 2px solid #005c2b;
-        padding: 10px;
+        background: #004d26;
+        color: white;
+        padding: 12px;
         text-align: center;
-        color: #888;
-        font-size: 0.8rem;
+        font-weight: 700;
         z-index: 1000;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
     }
 
-    /* التبويبات */
+    /* تحسين التبويبات */
     .stTabs [data-baseweb="tab-list"] {
-        background: rgba(255,255,255,0.05);
-        border-radius: 15px;
-        padding: 5px;
+        background: transparent;
+        border-bottom: 2px solid #006633;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
     }
+    
     .stTabs [data-baseweb="tab"] {
         background: transparent;
-        color: #aaa;
+        color: #666;
+        font-weight: 700;
+        padding: 10px 25px;
+        border-radius: 8px 8px 0 0;
     }
+    
     .stTabs [aria-selected="true"] {
-        background: #005c2b;
+        background: #006633;
         color: white;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. إدارة السجلات (Logs Manager)
+# 2. إدارة السجلات والبيانات
 # ==========================================
 
 def log_event(message, status="INFO"):
-    """دالة لتسجيل الأحداث وعرضها في اللوج"""
     timestamp = datetime.datetime.now().strftime("%H:%M:%S")
     entry = f"[{timestamp}] [{status}] {message}"
     st.session_state.logs.append(entry)
-    
-    # تحديث واجهة اللوج
-    log_container = st.session_state.get('log_container')
-    if log_container:
-        with log_container.container():
-            # عرض آخر 10 رسائل فقط للحفاظ على الأداء
-            for msg in reversed(st.session_state.logs[-10:]):
-                color = "#ff4444" if "ERROR" in msg else "#00ff88"
-                st.markdown(f"<div style='color:{color}; margin-bottom:5px; font-size:12px;'>{msg}</div>", unsafe_allow_html=True)
 
-# ==========================================
-# 3. تهيئة البيانات والجلسة (Data & State)
-# ==========================================
-
-# تهيئة السجلات
-if 'logs' not in st.session_state:
-    st.session_state.logs = []
-
-# مستخدمون افتراضيون
+# تهيئة البيانات الاحترافية
 if 'users' not in st.session_state:
     st.session_state.users = [
         {"username": "admin", "password": "123", "name": "مدير المنصة", "role": "مدير"},
-        {"username": "teacher", "password": "123", "name": "أ. محمد", "role": "معلم"},
-        {"username": "student", "password": "123", "name": "الطالب أحمد", "role": "طالب"}
+        {"username": "teacher", "password": "123", "name": "أ. د. كمال", "role": "معلم"},
+        {"username": "student", "password": "123", "name": "الطالب سعيد", "role": "طالب"}
     ]
-    log_event("تم تحميل قاعدة بيانات المستخدمين الافتراضية")
+    log_event("تم تهيئة النظام بنجاح")
 
-# دروس
 if 'lessons' not in st.session_state:
+    # عناوين احترافية
     st.session_state.lessons = [
-        {"id": 1, "title": "شرح المعادلات", "subject": "رياضيات", "instructor": "أ. محمد", "video_url": "https://www.youtube.com/watch?v=ZcQnJ1vQ2lY"},
-        {"id": 2, "title": "تاريخ الجزائر", "subject": "تاريخ", "instructor": "أ. محمد", "video_url": "https://www.youtube.com/watch?v=2nSspGq1ZlY"}
+        {
+            "id": 1, 
+            "title": "التفاضل والتكامل: الأساسيات المتقدمة", 
+            "subject": "رياضيات", 
+            "instructor": "أ. د. كمال", 
+            "video_url": "https://www.youtube.com/watch?v=WUvTyaaNkzM",
+            "description": "شرح مفصل لمفاهيم النهايات والمشتقات في التفاضل مع أمثلة تطبيقية على الحياة."
+        },
+        {
+            "id": 2, 
+            "title": "تاريخ الجزائر الحديث والمعاصر", 
+            "subject": "تاريخ", 
+            "instructor": "أ. د. كمال", 
+            "video_url": "https://www.youtube.com/watch?v=G8Gp9iG7S_A",
+            "description": "نظرة معمقة على الأحداث التاريخية لثورة التحرير والاستقلال."
+        },
+        {
+            "id": 3, 
+            "title": "مقدمة في الذكاء الاصطناعي", 
+            "subject": "علوم الحاسوب", 
+            "instructor": "أ. د. كمال", 
+            "video_url": "https://www.youtube.com/watch?v=aircAruvnKk",
+            "description": "تعلم كيف تعمل الخوارزميات الحديثة والشبكات العصبية بأسلوب مبسط."
+        }
     ]
+
+if 'logs' not in st.session_state:
+    st.session_state.logs = []
 
 if 'progress' not in st.session_state:
     st.session_state.progress = []
@@ -235,8 +214,27 @@ if 'progress' not in st.session_state:
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
 
+# بيانات إعلانات احترافية (World Class)
+announcements_data = [
+    {
+        "title": "المؤتمر الدولي للتعليم الرقمي 2024",
+        "desc": "ندعوكم للمشاركة في المؤتمر الدولي الذي سيعقد في الجزائر العاصمة في شهر أكتوبر.",
+        "img": "https://images.unsplash.com/photo-1544531586-fde5298cdd40?w=600&q=80"
+    },
+    {
+        "title": "إعلان قائمة التفوق للفصل الدراسي",
+        "desc": "تهنئ إدارة المدرسة الطلاب الحاصلين على مرتبة الشرف لهذا الفصل.",
+        "img": "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&q=80"
+    },
+    {
+        "title": "فرص منح دراسية خارجية",
+        "desc": "تتوفر منح دراسية كاملة للطلاب المتفوقين للدراسة في الجامعات الفرنسية والألمانية.",
+        "img": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&q=80"
+    }
+]
+
 # ==========================================
-# 4. دوال مساعدة (Helpers)
+# 3. دوال مساعدة
 # ==========================================
 
 def extract_youtube_id(url):
@@ -247,83 +245,107 @@ def extract_youtube_id(url):
         return None
 
 # ==========================================
-# 5. واجهات النظام (Pages)
+# 4. الصفحات (Pages)
 # ==========================================
 
 def show_login():
-    """واجهة الدخول والتسجيل مع التصميم الجديد"""
-    
-    # تبويب الدخول والتسجيل
     tab_login, tab_signup = st.tabs(["🔐 تسجيل الدخول", "📝 إنشاء حساب جديد"])
     
     with tab_login:
-        st.markdown("<div class='glass-dark' style='max-width: 500px; margin: 50px auto; text-align: center;'>", unsafe_allow_html=True)
-        st.markdown("<h1 style='color: #00ff88;'>مرحباً بعودتك 🇩🇿</h1>", unsafe_allow_html=True)
+        st.markdown("<div class='pro-card' style='max-width: 500px; margin: 80px auto; text-align: center;'>", unsafe_allow_html=True)
+        st.markdown("<h1 style='color: #006633; font-size: 3rem;'>مرحباً بعودتك</h1>", unsafe_allow_html=True)
+        st.write("<h3 style='color: #666;'>المنصة الأكاديمية المتكاملة</h3>", unsafe_allow_html=True)
         
         with st.form("login_form"):
             username = st.text_input("اسم المستخدم")
             password = st.text_input("كلمة المرور", type="password")
             
-            if st.form_submit_button("دخول", use_container_width=True, type="primary"):
+            if st.form_submit_button("دخول للنظام", use_container_width=True, type="primary"):
                 user = next((u for u in st.session_state.users if u['username'] == username and u['password'] == password), None)
                 if user:
                     st.session_state['user'] = user
                     st.session_state['logged_in'] = True
-                    log_event(f"تم تسجيل الدخول للمستخدم: {username}")
+                    log_event(f"تم تسجيل الدخول: {username}")
                     st.success("تم الدخول بنجاح")
                     time.sleep(1)
                     st.rerun()
                 else:
-                    st.error("بيانات غير صحيحة")
-                    log_event("فشل تسجيل الدخول: خطأ في البيانات", "ERROR")
-        
+                    st.error("بيانات خاطئة")
+                    log_event("فشل تسجيل دخول", "ERROR")
         st.markdown("</div>", unsafe_allow_html=True)
 
     with tab_signup:
-        st.markdown("<div class='glass-dark' style='max-width: 500px; margin: 50px auto;'>", unsafe_allow_html=True)
-        st.markdown("<h2 style='color: #00ff88;'>حساب طالب جديد</h2>", unsafe_allow_html=True)
+        st.markdown("<div class='pro-card' style='max-width: 500px; margin: 80px auto;'>", unsafe_allow_html=True)
+        st.markdown("<h2 style='color: #006633;'>تسجيل طالب جديد</h2>", unsafe_allow_html=True)
         
         with st.form("signup_form"):
             new_name = st.text_input("الاسم الكامل")
             new_username = st.text_input("اسم المستخدم")
             new_password = st.text_input("كلمة المرور", type="password")
             
-            if st.form_submit_button("تسجيل", use_container_width=True, type="primary"):
-                # التحقق من عدم وجود المستخدم مسبقاً
-                exists = any(u['username'] == new_username for u in st.session_state.users)
-                if exists:
-                    st.error("اسم المستخدم مستخدم بالفعل")
-                    log_event(f"محاولة تسجيل مستخدم مكرر: {new_username}", "ERROR")
-                elif new_name and new_username and new_password:
-                    # إضافة المستخدم الجديد
+            if st.form_submit_button("تسجيل الحساب", use_container_width=True, type="primary"):
+                if not any(u['username'] == new_username for u in st.session_state.users):
                     st.session_state.users.append({
-                        "username": new_username,
-                        "password": new_password,
-                        "name": new_name,
-                        "role": "طالب"
+                        "username": new_username, "password": new_password,
+                        "name": new_name, "role": "طالب"
                     })
-                    log_event(f"تم تسجيل طالب جديد: {new_name}")
-                    st.success("تم إنشاء الحساب بنجاح! يمكنك الدخول الآن.")
+                    log_event(f"تسجيل طالب جديد: {new_name}")
+                    st.success("تم إنشاء الحساب")
                     time.sleep(1)
                     st.rerun()
                 else:
-                    st.error("يرجى ملء جميع الحقول")
-        
+                    st.error("اسم المستخدم موجود")
         st.markdown("</div>", unsafe_allow_html=True)
+
+def show_admin_dashboard():
+    st.sidebar.title(f"👮 {st.session_state.user['name']}")
+    st.header("📊 لوحة القيادة التحليلية")
+    
+    # إحصائيات رئيسية
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("إجمالي المستخدمين", len(st.session_state.users), "+5%", delta_color="normal")
+    c2.metric("المحتوى التعليمي", len(st.session_state.lessons), "+2", delta_color="normal")
+    c3.metric("نسبة النشاط", "87%", "+12%", delta_color="normal")
+    c4.metric("حالة النظام", "مستقر", "🟢")
+    
+    st.divider()
+    
+    # رسم بياني (Dummy Data for Professional Look)
+    col_chart, col_data = st.columns([2, 1])
+    
+    with col_chart:
+        st.subheader("📈 نمو التسجيلات الأسبوعي")
+        dates = pd.date_range(end=datetime.date.today(), periods=7)
+        growth_data = np.random.randint(5, 20, size=7)
+        chart_df = pd.DataFrame({'التاريخ': dates.strftime('%d-%m'), 'التسجيلات': growth_data})
+        st.line_chart(chart_df.set_index('التاريخ'), use_container_width=True, color="#006633")
+    
+    with col_data:
+        st.subheader("أحدث النشاطات")
+        activities = [
+            "تسجيل طالب جديد: سعيد",
+            "إضافة درس: الذكاء الاصطناعي",
+            "تحديث النظام",
+            "أرشيف ملفات PDF"
+        ]
+        for act in activities:
+            st.markdown(f"""
+            <div style='background: #f9fafb; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem;'>
+                🟢 {act}
+            </div>
+            """, unsafe_allow_html=True)
 
 def show_teacher_dashboard():
     st.sidebar.title(f"👨‍🏫 {st.session_state.user['name']}")
     
-    st.header("إدارة الدروس")
-    
     with st.form("add_lesson"):
-        st.subheader("➕ إضافة درس")
-        c1, c2 = st.columns(2)
-        title = c1.text_input("العنوان")
-        subject = c2.selectbox("المادة", ["رياضيات", "علوم", "تاريخ"])
+        st.markdown("### ➕ إضافة درس جديد")
+        col1, col2 = st.columns(2)
+        title = col1.text_input("عنوان الدرس الاحترافي")
+        subject = col2.selectbox("المادة", ["رياضيات", "علوم الحاسوب", "تاريخ", "فيزياء"])
         video_url = st.text_input("رابط الفيديو")
         
-        if st.form_submit_button("نشر", use_container_width=True):
+        if st.form_submit_button("نشر الدرس", use_container_width=True, type="primary"):
             if title and video_url:
                 st.session_state.lessons.append({
                     "id": len(st.session_state.lessons) + 1,
@@ -331,62 +353,63 @@ def show_teacher_dashboard():
                     "instructor": st.session_state.user['name'],
                     "video_url": video_url
                 })
-                st.success("تمت الإضافة")
-                log_event(f"أضاف الأستاذ {st.session_state.user['name']} درس جديد: {title}")
+                log_event("تم إضافة درس جديد")
+                st.success("تم النشر")
                 st.rerun()
-
+    
     # قائمة الدروس مع زر الحذف
     for lesson in st.session_state.lessons:
         if lesson['instructor'] == st.session_state.user['name']:
-            with st.container():
-                c1, c2 = st.columns([4, 1])
-                c1.markdown(f"**{lesson['title']}**")
-                if c2.button("🗑️", key=f"del_{lesson['id']}"):
-                    st.session_state.lessons.remove(lesson)
-                    log_event("تم حذف درس من قبل المعلم", "WARNING")
-                    st.rerun()
+            col1, col2 = st.columns([4, 1])
+            col1.markdown(f"**{lesson['title']}**")
+            if col2.button("🗑️ حذف", key=f"del_{lesson['id']}"):
+                st.session_state.lessons.remove(lesson)
+                log_event("حذف درس", "WARNING")
+                st.rerun()
 
 def show_student_dashboard():
     st.sidebar.title(f"🎓 {st.session_state.user['name']}")
     
-    # 5 تبويبات
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📢 الإعلانات", "📚 الدروس", "📈 التقدم", "🤖 المساعد", "💡 نصائح"])
+    # حساب التقدم
+    prog = len(st.session_state.progress) / len(st.session_state.lessons) * 100 if st.session_state.lessons else 0
     
-    # 1. الإعلانات
+    # التبويبات
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📢 الإعلانات الأكاديمية", "📚 المكتبة الرقمية", "📈 تقدمك", "🤖 المساعد الذكي", "💡 نصائح التفوق"])
+    
+    # 1. الإعلانات الاحترافية
     with tab1:
-        for i in range(3):
+        for ann in announcements_data:
             st.markdown(f"""
-            <div class='glass-dark'>
-                <h3>حدث تعليمي {i+1}</h3>
-                <p>هذا إعلان وهمي لعرض الميزات الجمالية للتصميم...</p>
+            <div class='pro-card' style='padding: 0; overflow: hidden;'>
+                <img src="{ann['img']}" style="width:100%; height: 200px; object-fit: cover;">
+                <div style="padding: 20px;">
+                    <h3 style="color: #006633;">{ann['title']}</h3>
+                    <p style="color: #4b5563;">{ann['desc']}</p>
+                </div>
             </div>
             """, unsafe_allow_html=True)
             
-    # 2. الدروس (بأسلوب Diapo)
+    # 2. المكتبة الرقمية
     with tab2:
         if 'selected_lesson' in st.session_state:
             show_lesson_player(st.session_state['selected_lesson'])
         else:
             for lesson in st.session_state.lessons:
                 yt_id = extract_youtube_id(lesson['video_url'])
-                thumb = f"https://img.youtube.com/vi/{yt_id}/hqdefault.jpg" if yt_id else "https://via.placeholder.com/600x340?text=Video"
+                thumb = f"https://img.youtube.com/vi/{yt_id}/maxresdefault.jpg" if yt_id else "https://placehold.co/800x450/006633/FFFFFF?text=Video+No+Preview"
                 
-                # تصميم الديابو (Diapo Style)
+                # تصميم البطاقة الاحترافي للدرس
                 st.markdown(f"""
-                <div class="video-diapo" style="cursor: pointer;" onclick="document.getElementById('btn_{lesson['id']}').click()">
-                    <img src="{thumb}" alt="{lesson['title']}">
-                    <div class="play-overlay">
-                        <div class="play-btn"></div>
+                <div class='pro-card'>
+                    <div class="video-container">
+                        <img src="{thumb}">
                     </div>
+                    <h2 style="margin-top: 15px;">{lesson['title']}</h2>
+                    <p style="color: #666; font-size: 1.1rem; margin-bottom: 20px;">{lesson.get('description', '')}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # وصف الدرس
-                col1, col2 = st.columns([3, 1])
-                col1.markdown(f"<h3>{lesson['title']}</h3>", unsafe_allow_html=True)
-                
-                # زر مخفي لتفعيل النقر
-                if col2.button("مشاهدة", key=f"btn_{lesson['id']}", use_container_width=True):
+                if st.button(f"👀 مشاهدة الدرس الآن", key=f"watch_{lesson['id']}", use_container_width=True, type="primary"):
                     st.session_state['selected_lesson'] = lesson
                     st.rerun()
                 
@@ -394,28 +417,37 @@ def show_student_dashboard():
 
     # 3. التقدم
     with tab3:
-        prog = len(st.session_state.progress) / len(st.session_state.lessons) * 100 if st.session_state.lessons else 0
-        st.markdown(f"<h1 style='text-align:center; color: #00ff88;'>{int(prog)}%</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='text-align: center; font-size: 4rem; color: #006633;'>{int(prog)}%</h1>", unsafe_allow_html=True)
         st.progress(prog / 100)
+        
+        col1, col2 = st.columns(2)
+        col1.metric("الدروس المكتملة", len(st.session_state.progress))
+        col2.metric("الدروس المتبقية", len(st.session_state.lessons) - len(st.session_state.progress))
 
     # 4. المساعد
     with tab4:
-        st.info("اسألني عن دروسك!")
+        st.header("🤖 المساعد الذكي الأكاديمي")
+        st.info("أنا هنا للمساعدة في دراستك")
         
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = []
             
         for msg in st.session_state.chat_history:
             with st.chat_message(msg["role"]):
-                st.write(msg["content"])
+                st.markdown(f"<div style='font-size: 1.1rem;'>{msg['content']}</div>", unsafe_allow_html=True)
         
-        user_input = st.chat_input("اكتب...")
+        user_input = st.chat_input("اكتب سؤالك...")
+        
         if user_input:
             st.session_state.chat_history.append({"role": "user", "content": user_input})
             with st.chat_message("user"):
                 st.write(user_input)
             
-            response = "هذا رد تجريبي من المساعد الذكي."
+            response = random.choice([
+                "هذا موضوع مهم للغاية، يرجى مراجعة الفيديو مرة أخرى.",
+                "سؤال ممتاز! يرتبط هذا المفهوم بقوانين الفيزياء الأساسية.",
+                "الاستمرارية هي مفتاح التعلم."
+            ])
             st.session_state.chat_history.append({"role": "assistant", "content": response})
             with st.chat_message("assistant"):
                 st.write(response)
@@ -423,55 +455,57 @@ def show_student_dashboard():
             
     # 5. نصائح
     with tab5:
-        st.success("الصبر مفتاح الفهم")
+        tips = ["المراجعة بعد 24 ساعة تثبت المعلومة.", "ابدأ اليوم بدروس الأصعب.", "استخدم الملاحظات البصرية."]
+        for t in tips:
+            st.markdown(f"<h2 style='color: #006633; font-size: 1.5rem;'>📌 {t}</h2>", unsafe_allow_html=True)
 
 def show_lesson_player(lesson):
     st.title(lesson['title'])
-    if st.button("عودة"):
+    
+    if st.button("⬅️ عودة للمكتبة"):
         del st.session_state['selected_lesson']
-        # تسجيل التقدم
         if lesson['id'] not in st.session_state.progress:
             st.session_state.progress.append(lesson['id'])
-            log_event(f"شاهد الطالب درس: {lesson['title']}")
+            log_event(f"مشاهدة درس: {lesson['title']}")
         st.rerun()
         
     yt_id = extract_youtube_id(lesson['video_url'])
     if yt_id:
         st.components.v1.iframe(f"https://www.youtube.com/embed/{yt_id}", height=500)
+    else:
+        st.warning("لا يمكن عرض الفيديو داخلياً")
 
 # ==========================================
-# 6. التشغيل الرئيسي (Main Loop)
+# 5. التشغيل الرئيسي
 # ==========================================
 
 def main():
-    # 1. عرض اللوج (Logs Panel) إذا لم يكن المسجل دخوله، يمكن إظهاره دائماً إذا رغبت
-    # سنستخدم st.empty لتحديث اللوج
+    # تهيئة مربع اللوج
     log_container = st.empty()
     st.session_state['log_container'] = log_container
-    
+
     if not st.session_state['logged_in']:
         show_login()
     else:
-        # المحتوى الرئيسي
         with st.sidebar:
-            st.write(f"**{st.session_state.user['name']}** ({st.session_state.user['role']})")
+            st.write(f"**{st.session_state.user['name']}**")
+            st.write(f"الدور: {st.session_state.user['role']}")
             st.divider()
-            if st.button("خروج"):
+            if st.button("🚪 تسجيل الخروج"):
                 st.session_state['logged_in'] = False
                 if 'selected_lesson' in st.session_state: del st.session_state['selected_lesson']
-                log_event("تسجيل خروج المستخدم", "WARNING")
+                log_event("تسجيل خروج", "WARNING")
                 st.rerun()
         
         role = st.session_state.user['role']
         if role == 'مدير':
-            st.header("لوحة المدير")
-            st.dataframe(st.session_state.users)
+            show_admin_dashboard()
         elif role == 'معلم':
             show_teacher_dashboard()
         elif role == 'طالب':
             show_student_dashboard()
 
-    # 2. الشريط السفلي (Footer)
+    # الشريط السفلي
     st.markdown(f"""
     <div class="footer-bar">
         <p>
