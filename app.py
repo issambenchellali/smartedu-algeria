@@ -1,359 +1,316 @@
 """
-🇩🇿 SmartEdu Algeria V6.0 - Clean & Functional
-مميزات الإصلاح:
-1. واجهة فاتحة عالية الوضوح (High Contrast / Large Fonts).
-2. مشغل دروس متكامل (فيديو يوتيوب مدمج + PDF + واجبات).
-3. مساعد ذكي محسن بقاعدة بيانات أوسع للاجابات.
+🇩🇿 SmartEdu Algeria V7.0 - Login & Dynamic Video System
+المميزات الجديدة:
+1. واجهة تسجيل دخول حقيقية (للمعلم والطالب).
+2. المعلم يمكنه إضافة دروس برابط فيديو من يوتيوب أو رابط مباشر.
+3. الطالب يشاهد الفيديو باستخدام الرابط الذي أدخله المعلم ديناميكياً.
+4. واجهة واضحة وعالية التباين (كما طلبت سابقاً).
 """
 
 import streamlit as st
 import pandas as pd
-import numpy as np
-import time
-import random
-from typing import List, Dict
-import streamlit.components.v1 as components
+import re
+from datetime import datetime
 
 # ==========================================
-# 1. إعدادات التصميم (UI/UX) - التركيز على الوضوح
+# 1. إعدادات التصميم (واضح وكبير)
 # ==========================================
 
 st.set_page_config(
-    page_title="المنصة التعليمية",
-    page_icon="📚",
+    page_title="منصة التعلم الذكية",
+    page_icon="🇩🇿",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed" # إخفاء الشريط الجانبي في صفحة الدخول
 )
 
-# CSS لتكبير الخطوط وتحسين التباين
 st.markdown("""
 <style>
-    /* إعدادات الخطوط والألوان الأساسية */
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
     
     body {
         font-family: 'Tajawal', sans-serif;
-        background-color: #ffffff; /* خلفية بيضاء نقية */
-        color: #1a202c; /* نص أسود داكن للقراءة السهلة */
+        background-color: #ffffff;
+        color: #1a202c;
     }
     
-    /* تكبير النصوص في Streamlit */
     .stApp {
-        font-size: 18px; /* حجم خط أساسي كبير */
+        font-size: 18px;
         direction: rtl;
     }
     
-    h1, h2, h3, h4 {
-        color: #006633; /* أخضر جزائري واضح للعناوين */
+    h1, h2, h3 {
+        color: #006633;
         font-weight: 800;
     }
     
-    /* تصميم البطاقات */
-    .clean-card {
-        background: #f7fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 25px;
+    /* تنسيق صفحة الدخول */
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80vh;
+        background: #f0fdf4;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    /* بطاقات الدروس */
+    .lesson-card {
+        border: 2px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 20px;
         margin-bottom: 20px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        transition: transform 0.2s;
+        background: #fff;
+        transition: all 0.3s;
+        cursor: pointer;
     }
-    
-    .clean-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    .lesson-card:hover {
         border-color: #006633;
+        background: #f7fafc;
     }
-    
-    /* الأزرار */
+
     .stButton>button {
         font-size: 18px;
         font-weight: bold;
-        border-radius: 8px;
         height: 50px;
+        border-radius: 8px;
     }
-    
+
     .stButton>button[kind="primary"] {
         background-color: #006633;
         color: white;
     }
 
-    /* الروابط */
-    a {
-        color: #006633;
-        font-weight: bold;
-        text-decoration: none;
-    }
-    
-    /* إخفاء الفوتر */
     footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. البيانات والروابط (Data & Media)
+# 2. تهيئة البيانات والمستخدمين
 # ==========================================
 
-# بيانات دروس غنية مع روابط يوتيوب حقيقية
-LESSONS_DATA = [
-    {
-        "id": 1,
-        "title": "شرح المعادلات الخطية للمبتدئين",
-        "subject": "رياضيات",
-        "level": "متوسط",
-        "instructor": "أ. محمد",
-        "youtube_id": "LwCRTTm8x4k", # فيديو حقيقي
-        "pdf_link": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-        "description": "شرح مبسط للمعادلات من الدرجة الأولى مع أمثلة محلولة.",
-        "tags": ["جبر", "معادلات", "سهل"]
-    },
-    {
-        "id": 2,
-        "title": "كيف تعمل الطاقة الشمسية؟",
-        "subject": "علوم",
-        "level": "ثانوي",
-        "instructor": "د. سارة",
-        "youtube_id": "xKxrkax7-5M",
-        "pdf_link": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-        "description": "شرح فيزيائي لعملية تحويل الطاقة الشمسية إلى كهرباء.",
-        "tags": ["طاقة", "بيئة", "فيزياء"]
-    },
-    {
-        "id": 3,
-        "title": "قواعد النحو: الفاعل والمفعول به",
-        "subject": "لغة عربية",
-        "level": "ابتدائي",
-        "instructor": "أ. أحمد",
-        "youtube_id": "p6b2Zx9q5YQ", # مثال
-        "pdf_link": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-        "description": "تعلم الفرق بين الفاعل والمفعول به بأسلوب ممتع.",
-        "tags": ["نحو", "قواعد", "عربي"]
-    }
-]
-
-# قاعدة بيانات محسنة للمساعد الذكي لمنع تكرار نفس الجملة
-AI_KNOWLEDGE_BASE = {
-    "رياضيات": [
-        "الرياضيات هي لغة الكون، المفتاح هو فهم المنطق وليس الحفظ.",
-        "لحل المعادلات، حاول دائماً عزل المجهول في طرف واحد.",
-        "في الهندسة، الرسم هو أفضل طريقة للفهم."
-    ],
-    "فيزياء": [
-        "الطاقة لا تفنى ولا تستحدث من العدم، تذكر هذا القانون دائماً.",
-        "الجاذبية هي قوة تجذبنا نحو الأرض، وهي سبب سقوط الأجسام.",
-        "السرعة هي المسافة مقسومة على الزمن."
-    ],
-    "عام": [
-        "التعلم المستمر هو مفتاح النجاح، لا تستسلم أبداً.",
-        "حاول تقسيم دراستك إلى فترات قصيرة حتى لا تشعر بالإرهاق.",
-        "النوم الجيد يزيد من قدرة الدماغ على التركيز بنسبة 50%.",
-        "هل جربت استخدام الخرائط الذهنية لتنظيم أفكارك؟",
-        "المراجعة بعد 24 ساعة من الدرس تحفظ المعلومة لفترة أطول."
+if 'users' not in st.session_state:
+    st.session_state.users = [
+        {"username": "teacher", "password": "123", "name": "الأستاذ محمد", "role": "معلم"},
+        {"username": "student", "password": "123", "name": "التلميذ أحمد", "role": "طالب"}
     ]
-}
+
+if 'lessons' not in st.session_state:
+    # دروس افتراضية، لكن يمكن للمعلم إضافة غيرها
+    st.session_state.lessons = [
+        {
+            "id": 1,
+            "title": "شرح قاعدة باسكال",
+            "subject": "فيزياء",
+            "video_url": "https://www.youtube.com/watch?v=ZcQnJ1vQ2lY", # رابط يوتيوب كمثال
+            "instructor": "الأستاذ محمد",
+            "description": "شرح مبسط لضغط السوائل."
+        }
+    ]
+
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
+
+if 'user' not in st.session_state:
+    st.session_state['user'] = None
 
 # ==========================================
-# 3. المنطق البرمجي المحسن (Smart Logic)
+# 3. دوال مساعدة (Helper Functions)
 # ==========================================
 
-class SmartTutor:
-    """مساعد ذكي محسن لا يتكرر في كلامه"""
-    
-    def get_response(self, user_input: str) -> str:
-        text = user_input.lower()
-        
-        # منطق البحث عن كلمات مفتاحية
-        if "رياض" in text or "معادلة" in text or "جبر" in text:
-            return random.choice(AI_KNOWLEDGE_BASE["رياضيات"])
-        elif "فيزي" in text or "طاقة" in text or "جاذبية" in text:
-            return random.choice(AI_KNOWLEDGE_BASE["فيزياء"])
-        elif "صعب" in text or "لم افهم" in text:
-            return "لا بأس، هذا طبيعي. حاول مشاهدة الفيديو مرة أخرى وتوقف عند كل نقطة غير واضحة، أو اسألني عن جزء محدد."
-        elif "شكرا" in text:
-            return "عفواً! أنا هنا دائماً لمساعدتك. هل لديك سؤال آخر؟"
-        else:
-            # رد عام مفيد بدلاً من سؤال التوضيح الممل
-            return random.choice(AI_KNOWLEDGE_BASE["عام"])
+def extract_youtube_id(url):
+    """استخراج معرف الفيديو من رابط يوتيوب لعمل Embed"""
+    pattern = r'(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})'
+    match = re.search(pattern, url)
+    return match.group(1) if match else None
 
 # ==========================================
-# 4. دوال العرض (UI Functions)
+# 4. واجهات النظام (Pages)
 # ==========================================
 
-def show_lesson_card(lesson):
-    """عرض بطاقة درس كبيرة وواضحة"""
-    with st.container():
-        col_img, col_info = st.columns([1, 2])
-        
-        with col_img:
-            # استخدام صورة مصغرة للفيديو
-            thumbnail_url = f"https://img.youtube.com/vi/{lesson['youtube_id']}/mqdefault.jpg"
-            st.image(thumbnail_url, use_column_width=True)
-        
-        with col_info:
-            st.markdown(f"<h2 style='margin:0;'>{lesson['title']}</h2>", unsafe_allow_html=True)
-            
-            # معلومات الدرس بوضوح
-            st.markdown(f"""
-            <div style='background: #e6fffa; padding: 10px; border-radius: 5px; border-right: 4px solid #006633; margin: 10px 0;'>
-                <strong>المادة:</strong> {lesson['subject']} | 
-                <strong>الصف:</strong> {lesson['level']} | 
-                <strong>المدرس:</strong> {lesson['instructor']}
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.write(lesson['description'])
-            
-            # زر كبير وواضح للدخول
-            if st.button(f"▶️ مشاهدة الدرس: {lesson['title']}", key=f"btn_{lesson['id']}", use_container_width=True):
-                st.session_state['current_lesson'] = lesson
-                st.session_state['page'] = 'player'
-                st.rerun()
-
-def show_lesson_player(lesson):
-    """مشغل الدرس المتكامل (فيديو + ملفات)"""
-    st.markdown(f"<h1>{lesson['title']}</h1>", unsafe_allow_html=True)
+def show_login():
+    """واجهة تسجيل الدخول"""
+    st.markdown("<div class='login-container'>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #006633;'>تسجيل الدخول 🇩🇿</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #666;'>منصة التعليم الذكية</p>", unsafe_allow_html=True)
+    st.write("---")
     
-    # أزرار التحكم العلوية
-    if st.button("⬅️ عودة للدروس"):
-        st.session_state['page'] = 'home'
-        st.rerun()
-    
-    # نظام التبويبات
-    tab1, tab2, tab3 = st.tabs(["📺 الفيديو التعليمي", "📄 ملاحظات وملفات", "✏️ الواجبات"])
-    
-    with tab1:
-        st.subheader("فيديو الشرح")
-        # تضمين فيديو يوتيوب
-        video_url = f"https://www.youtube.com/embed/{lesson['youtube_id']}?rel=0"
-        components.iframe(video_url, height=500, scrolling=False)
-        st.caption("إذا لم يظهر الفيديو، تأكد من اتصالك بالإنترنت.")
-    
-    with tab2:
-        st.subheader("ملفات الدرس والملاحظات")
+    with st.form("login_form"):
         col1, col2 = st.columns(2)
         with col1:
-            st.markdown(f"#### ملخص الدرس")
-            st.write("هنا يوجد ملخص النقاط الأساسية التي تم شرحها في الفيديو.")
-            st.info("المفهوم الأول: شرح المقدمة")
-            st.info("المفهوم الثاني: شرح التطبيق العملي")
+            username = st.text_input("اسم المستخدم")
+        with col2:
+            password = st.text_input("كلمة المرور", type="password")
+        
+        submitted = st.form_submit_button("دخول", use_container_width=True, type="primary")
+        
+        if submitted:
+            # التحقق من المستخدم
+            user_found = None
+            for u in st.session_state.users:
+                if u['username'] == username and u['password'] == password:
+                    user_found = u
+                    break
+            
+            if user_found:
+                st.session_state['user'] = user_found
+                st.session_state['logged_in'] = True
+                st.success(f"تم تسجيل الدخول بنجاح! مرحباً {user_found['name']}")
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.error("خطأ: اسم المستخدم أو كلمة المرور غير صحيحة")
+                st.info("جرب:\nالمعلم: teacher / 123\nالطالب: student / 123")
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+
+def show_teacher_dashboard():
+    """لوحة تحكم المعلم: إضافة دروس برابط فيديو"""
+    st.sidebar.title(f"👨‍🏫 {st.session_state.user['name']}")
+    
+    st.header("📂 إدارة الدروس")
+    st.markdown("أضف درساً جديداً عبر لصق رابط الفيديو أدناه.")
+    
+    # نموذج إضافة درس
+    with st.form("add_lesson_form"):
+        st.subheader("➕ إضافة درس جديد")
+        col1, col2 = st.columns(2)
+        with col1:
+            title = st.text_input("عنوان الدرس", placeholder="مثال: شرح المعادلات")
+            subject = st.selectbox("المادة", ["رياضيات", "فيزياء", "علوم", "لغة عربية", "تاريخ"])
         
         with col2:
-            st.markdown(f"#### تحميلات")
-            if lesson.get('pdf_link'):
-                st.markdown(f"""
-                <a href="{lesson['pdf_link']}" target="_blank" 
-                   style="display:block; background:#006633; color:white; padding:15px; 
-                          text-align:center; border-radius:8px; font-size:20px; text-decoration:none;">
-                    📥 تحميل ملف PDF للدرس
-                </a>
-                """, unsafe_allow_html=True)
+            level = st.selectbox("المستوى", ["ابتدائي", "متوسط", "ثانوي"])
+        
+        description = st.text_area("وصف الدرس", placeholder="اكتب نبذة مختصرة...")
+        
+        # حقل رابط الفيديو (هنا الميزة المطلوبة)
+        video_url = st.text_input("🔗 رابط الفيديو (YouTube or Direct)", placeholder="https://www.youtube.com/watch?v=...")
+        
+        if st.form_submit_button("نشر الدرس", use_container_width=True, type="primary"):
+            if title and video_url:
+                new_lesson = {
+                    "id": len(st.session_state.lessons) + 1,
+                    "title": title,
+                    "subject": subject,
+                    "level": level,
+                    "video_url": video_url,
+                    "instructor": st.session_state.user['name'],
+                    "description": description
+                }
+                st.session_state.lessons.append(new_lesson)
+                st.success("تمت إضافة الدرس بنجاح!")
+                st.rerun()
             else:
-                st.warning("لا يوجد ملف مرفق لهذا الدرس.")
+                st.error("يرجى ملء العنوان ورابط الفيديو")
     
-    with tab3:
-        st.subheader("تمارين وواجبات")
-        st.write("حل التمارين التالية للتأكد من فهمك للدرس:")
-        st.text_input("1. ما هو السؤال الأول؟", placeholder="اكتب إجابتك هنا...")
-        st.text_area("2. اشرح الفكرة الرئيسية بأسلوبك:", height=100)
-        
-        if st.button("إرسال الإجابات", use_container_width=True):
-            st.success("تم إرسال إجاباتك بنجاح! سيتم تقييمها من قبل المعلم.")
+    st.divider()
+    st.subheader("📜 الدروس التي قمت بإضافتها")
+    for lesson in reversed(st.session_state.lessons): # عرض الأحدث أولاً
+        if lesson['instructor'] == st.session_state.user['name']:
+            st.markdown(f"""
+            <div class="lesson-card">
+                <h3>{lesson['title']}</h3>
+                <p>{lesson['video_url']}</p>
+            </div>
+            """, unsafe_allow_html=True)
 
-def show_chatbot():
-    """واجهة المساعد الذكي المحسنة"""
-    st.title("🤖 المعلم الذكي")
-    st.markdown("اسألني أي سؤال عن دروسك، سأجيبك فوراً.")
+def show_student_dashboard():
+    """لوحة تحكم الطالب: عرض الدروس ومشاهدة الفيديو"""
+    st.sidebar.title(f"🎓 {st.session_state.user['name']}")
     
-    # تهيئة التاريخ
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
-    
-    # عرض الرسائل السابقة
-    chat_container = st.container()
-    with chat_container:
-        for msg in st.session_state.chat_history:
-            with st.chat_message(msg["role"]):
-                st.markdown(f"<span style='font-size: 18px;'>{msg['content']}</span>", unsafe_allow_html=True)
-    
-    # إدخال المستخدم
-    user_input = st.chat_input("اكتب سؤالك هنا...")
-    
-    if user_input:
-        # رسالة المستخدم
-        st.session_state.chat_history.append({"role": "user", "content": user_input})
-        with chat_container:
-            with st.chat_message("user"):
-                st.markdown(f"<span style='font-size: 18px;'>{user_input}</span>", unsafe_allow_html=True)
+    # إذا تم اختيار درس، عرض المشغل
+    if 'selected_lesson' in st.session_state:
+        show_lesson_player(st.session_state['selected_lesson'])
+    else:
+        st.header("📚 قائمة الدروس المتاحة")
         
-        # جواب الذكاء الاصطناعي
-        tutor = SmartTutor()
-        ai_response = tutor.get_response(user_input)
+        # فلاتر
+        subject_filter = st.selectbox("تصفية حسب المادة", ["الكل"] + ["رياضيات", "فيزياء", "علوم", "لغة عربية", "تاريخ"])
         
-        st.session_state.chat_history.append({"role": "assistant", "content": ai_response})
-        with chat_container:
-            with st.chat_message("assistant"):
-                st.markdown(f"<span style='font-size: 18px;'>{ai_response}</span>", unsafe_allow_html=True)
+        filtered_lessons = st.session_state.lessons
+        if subject_filter != "الكل":
+            filtered_lessons = [l for l in st.session_state.lessons if l['subject'] == subject_filter]
         
-        # تحديث العرض تلقائياً ليرى المستخدم الرد
+        if not filtered_lessons:
+            st.info("لا توجد دروس حالياً في هذه المادة.")
+        
+        # عرض البطاقات
+        for lesson in filtered_lessons:
+            with st.container():
+                col_vid, col_info = st.columns([1, 2])
+                with col_vid:
+                    # عرض صورة مصغرة إذا كان يوتيوب
+                    yt_id = extract_youtube_id(lesson['video_url'])
+                    if yt_id:
+                        st.image(f"https://img.youtube.com/vi/{yt_id}/hqdefault.jpg", use_column_width=True)
+                    else:
+                        st.image("https://via.placeholder.com/400x225?text=Video", use_column_width=True)
+                
+                with col_info:
+                    st.markdown(f"<h3>{lesson['title']}</h3>", unsafe_allow_html=True)
+                    st.markdown(f"<p><strong>المدرس:</strong> {lesson['instructor']} | <strong>المادة:</strong> {lesson['subject']}</p>", unsafe_allow_html=True)
+                    st.write(lesson['description'])
+                    
+                    # زر المشاهدة
+                    if st.button(f"👀 مشاهدة: {lesson['title']}", key=f"watch_{lesson['id']}", use_container_width=True):
+                        st.session_state['selected_lesson'] = lesson
+                        st.rerun()
+                
+                st.markdown("---")
+
+def show_lesson_player(lesson):
+    """مشغل الفيديو الديناميكي"""
+    st.title(f"🎬 {lesson['title']}")
+    
+    if st.button("⬅️ عودة للقائمة"):
+        del st.session_state['selected_lesson']
         st.rerun()
+    
+    # تحويل الرابط للعرض
+    yt_id = extract_youtube_id(lesson['video_url'])
+    
+    st.markdown(f"**المدرس:** {lesson['instructor']}")
+    st.markdown(f"**الرابط المستخدم:** {lesson['video_url']}")
+    st.divider()
+    
+    # منطق العرض
+    if yt_id:
+        # إذا كان الرابط يوتيوب، استخدم iframe مدمج
+        embed_url = f"https://www.youtube.com/embed/{yt_id}"
+        st.components.v1.iframe(embed_url, height=500, scrolling=False)
+    else:
+        # إذا كان رابط آخر (مثلاً mp4)، حاول تشغيله مباشرة
+        if lesson['video_url'].endswith('.mp4'):
+            st.video(lesson['video_url'])
+        else:
+            st.warning("هذا الرابط ليس من يوتيوب ولا يمكن مشاهدته داخلياً.")
+            st.markdown(f"### [اضغط هنا لمشاهدة الفيديو في نافذة جديدة]({lesson['video_url']})")
 
 # ==========================================
-# 5. التشغيل الرئيسي
+# 5. التوجيه الرئيسي (Routing)
 # ==========================================
 
 def main():
-    # حالة الجلسة الافتراضية
-    if 'page' not in st.session_state:
-        st.session_state['page'] = 'home'
-    if 'logged_in' not in st.session_state:
-        st.session_state['logged_in'] = True # تسجيل دخول مباشر للتجربة السريعة
-
-    # الشريط الجانبي
-    with st.sidebar:
-        st.markdown("<h1 style='color: #006633; text-align: center;'>🇩🇿 SmartEdu</h1>", unsafe_allow_html=True)
-        st.markdown("---")
+    if not st.session_state['logged_in']:
+        show_login()
+    else:
+        # زر الخروج في الشريط الجانبي
+        with st.sidebar:
+            st.divider()
+            if st.button("🚪 تسجيل الخروج"):
+                st.session_state['logged_in'] = False
+                st.session_state['user'] = None
+                if 'selected_lesson' in st.session_state:
+                    del st.session_state['selected_lesson']
+                st.rerun()
         
-        menu = st.radio(
-            "القائمة الرئيسية",
-            ["🏠 الصفحة الرئيسية", "📂 مكتبة الدروس", "🤖 المعلم الذكي", "📊 تقدمي"],
-            index=0
-        )
-        
-        if menu == "🏠 الصفحة الرئيسية":
-            st.session_state['page'] = 'home'
-        elif menu == "📂 مكتبة الدروس":
-            st.session_state['page'] = 'library'
-        elif menu == "🤖 المعلم الذكي":
-            st.session_state['page'] = 'chatbot'
-        
-        st.divider()
-        st.info("المستخدم: طالب نشط")
-
-    # منطق الصفحات
-    if st.session_state['page'] == 'player' and 'current_lesson' in st.session_state:
-        show_lesson_player(st.session_state['current_lesson'])
-    
-    elif st.session_state['page'] == 'chatbot':
-        show_chatbot()
-    
-    elif st.session_state['page'] == 'library':
-        st.header("مكتبة الدروس الكاملة")
-        for lesson in LESSONS_DATA:
-            show_lesson_card(lesson)
-            st.markdown("---")
-            
-    else: # Home
-        st.header("مرحباً بك في منصة التعلم الذكية")
-        st.markdown("اختر الدرس الذي تريد البدء به من القائمة:")
-        
-        col1, col2 = st.columns(2)
-        for i, lesson in enumerate(LESSONS_DATA):
-            if i % 2 == 0:
-                with col1:
-                    show_lesson_card(lesson)
-            else:
-                with col2:
-                    show_lesson_card(lesson)
+        # توجيه حسب الدور
+        if st.session_state.user['role'] == 'معلم':
+            show_teacher_dashboard()
+        else:
+            show_student_dashboard()
 
 if __name__ == "__main__":
     main()
