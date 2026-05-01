@@ -1,5 +1,5 @@
 streamlit
+supabase
 pandas
 numpy
 requests
-supabase
