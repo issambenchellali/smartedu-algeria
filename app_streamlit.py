@@ -1,9 +1,5 @@
 """
-🇩🇿 SmartEdu Algeria V13.0 (Diaporama Fixed)
-الإصلاحات:
-1. إصلاح مشكلة اختفاء صورة الدخول (Diaporama) باستخدام تخصيص CSS ديناميكي.
-2. القائمة الجانبية أزرار تفاعلية (Clickable).
-3. طباعة ضخمة (Large & Bold) مع لوحة ألوان "Innovative Algeria".
+منصة التعليم الذكية
 """
 
 import streamlit as st
@@ -16,11 +12,11 @@ import datetime
 import streamlit.components.v1 as components
 
 # ==========================================
-# 1. إعدادات CSS (Innovative Algeria + Diaporama Fix)
+# 1. إعدادات CSS
 # ==========================================
 
 st.set_page_config(
-    page_title="Global LMS - V13 Final",
+    page_title="منصة التعليم الذكية",
     page_icon="🇩🇿",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -137,7 +133,7 @@ st.markdown("""
         box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
     }
 
-    /* Diaporama للدخول (تم التصحيح) */
+    /* Diaporama */
     .login-bg {
         position: fixed;
         top: 0; left: 0;
@@ -230,7 +226,7 @@ def extract_youtube_id(url):
 # ==========================================
 
 def show_login():
-    # 1. تخصيص CSS لصفحة الدخول فقط (جعل الخلفية شفافة)
+    # 1. تخصيص CSS 
     st.markdown("""
     <style>
     div[data-testid="stApp"] { background: transparent !important; }
@@ -243,7 +239,7 @@ def show_login():
     # 3. حاوية الدخول
     col_center = st.columns([1, 2, 1])
     with col_center[1]:
-        st.markdown("<h1 style='color: #006241;'>مرحباً بعودتك 🇩🇿</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='color: #006241;'>مرحباً بعودتك</h1>", unsafe_allow_html=True)
         
         tab_login, tab_signup = st.tabs(["🔐 تسجيل الدخول", "📝 إنشاء حساب"])
         
@@ -450,7 +446,7 @@ def main():
     # الفوتر
     st.markdown("""
     <div class="footer-bar">
-        🇩🇿 <strong>Global LMS</strong> - منصة التعليم الذكية | بني مسوس | الماستر 01 | إشراف: د. بن عاشور رضا
+        🇩🇿 <strong>Global LMS</strong> - منصة التعليم الذكية | المدرسة العليا لاساتذة الصم البكم - بني مسوس | من اعداد الطلبة: بن شلالي المعتصم بالله - حلوز اشرف عبد النور | تحت إشراف: د. بن عاشور رضا
     </div>
     """, unsafe_allow_html=True)
 
