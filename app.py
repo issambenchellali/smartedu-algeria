@@ -30,8 +30,8 @@ st.set_page_config(
 # الاتصال بـ Supabase
 # في Streamlit Cloud، ضع هذه القيم في قسم Secrets
 # في التطوير المحلي، يمكنك وضعها مباشرة للتجربة
-SUPABASE_URL = st.secrets.get("SUPABASE_URL", "YOUR_SUPABASE_URL_HERE")
-SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "YOUR_SUPABASE_KEY_HERE")
+SUPABASE_URL = st.secrets.get("SUPABASE_URL", "https://mwikvmfxxcflmazmuomv.supabase.co")
+SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "sb_publishable_uI76ntewSSsJIPRJEZjsIg_GOnJFsG7")
 
 try:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
