@@ -339,7 +339,7 @@ def show_student_dashboard():
     
     prog = len(st.session_state.progress) / len(st.session_state.lessons) * 100 if st.session_state.lessons else 0
     
-    tab1, tab2, tab3, tab4 = st.tabs(["📢 الإعلانات", "📚 المكتبة", "📈 التقدم", "🤖 المساعد"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📢 الإعلانات", "📚 المكتبة", "📈 التقدم", "المساعد"])
     
     with tab1:
         for ann in announcements_data:
@@ -411,24 +411,9 @@ def main():
             st.divider()
             
             # القائمة التفاعلية (الأزرار)
-            if st.session_state.user['role'] == 'طالب':
-                if st.button("🏠 الرئيسية", key="nav_home", use_container_width=True):
-                    st.session_state['current_view'] = 'home'
-                    st.rerun()
-                
-                if st.button("📚 المكتبة", key="nav_library", use_container_width=True):
-                    st.session_state['current_view'] = 'library'
-                    st.rerun()
-                
-                if st.button("📈 التقدم", key="nav_progress", use_container_width=True):
-                    st.session_state['current_view'] = 'progress'
-                    st.rerun()
-                
-                if st.button("🤖 المساعد", key="nav_ai", use_container_width=True):
-                    st.session_state['current_view'] = 'ai'
-                    st.rerun()
-            else:
-                st.markdown("### 🏠 الرئيسية")
+
+
+            st.markdown("### 🏠 الرئيسية")
             
             st.divider()
             
