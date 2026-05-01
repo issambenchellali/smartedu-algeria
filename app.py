@@ -235,6 +235,7 @@ class DataManager:
 # 4. UI COMPONENTS & PAGES
 # ==========================================
 
+
 def show_login(db: DataManager):
     st.markdown("<h1 style='text-align: center; color: #1e3a8a; margin-bottom: 2rem;'>تسجيل الدخول 🇩🇿</h1>", unsafe_allow_html=True)
     
@@ -242,22 +243,35 @@ def show_login(db: DataManager):
     with col2:
         with st.form("login_form"):
             st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-            username = st.text_input("اسم المستخدم")
-            password = st.text_input("كلمة المرور", type="password")
-            st.markdown(f"<p style='text-align:center; color: #666;'>{CONNECTION_STATUS}</p>", unsafe_allow_html=True)
+            
+            # عرض حالة الاتصال بشكل واضح
+            if supabase:
+                st.success("✅ الاتصال بقاعدة البيانات يعمل")
+            else:
+                st.error("❌ فشل الاتصال بقاعدة البيانات! تأكد من الرابط والمفتاح.")
+            
+            username = st.text_input("اسم المستخدم", value="admin")
+            password = st.text_input("كلمة المرور", type="password", value="admin")
+            
             submitted = st.form_submit_button("دخول للنظام", use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
             if submitted:
-                user = db.login(username, password)
-                if user:
-                    st.session_state['user'] = user
-                    st.session_state['logged_in'] = True
-                    st.success(f"أهلاً بك {user['full_name']}")
-                    time.sleep(0.5)
-                    st.rerun()
-                else:
-                    st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
+                # محاولة تسجيل الدخول وعرض الخطأ إن وجد
+                try:
+                    user = db.login(username, password)
+                    if user:
+                        st.session_state['user'] = user
+                        st.session_state['logged_in'] = True
+                        st.success(f"أهلاً بك {user['full_name']}")
+                        time.sleep(0.5)
+                        st.rerun()
+                    else:
+                        st.error("🔐 اسم المستخدم أو كلمة المرور غير صحيحة.")
+                        st.info("تلميح: تأكد أنك قمت بتشغيل كود SQL لإضافة المستخدم 'admin'")
+                except Exception as e:
+                    st.error(f"حدث خطأ تقني: {str(e)}")
+
 
 def render_lesson_card(lesson, key):
     with st.container():
