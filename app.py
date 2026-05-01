@@ -1,564 +1,439 @@
 """
-🇩🇿 SmartEdu Algeria V3.0 - Ultimate Edition
-المميزات الجديدة:
-- واجهة تعليمية فائقة الجودة (Modern UI/UX)
-- لوحة قيادة احترافية KPI للمدراء والمعلمين
-- معرض صور مرئي (Visual Gallery) للصم والبكم
-- نظام تقييم واقتراحات ذكي
-- بيانات تجريبية غنية (Rich Mock Data)
+🇩🇿 SmartEdu Algeria V4.0 - Enterprise Connected Edition
+المميزات:
+- اتصال حقيقي بقاعدة بيانات Supabase
+- إدارة ملفات PDF للدروس (رفع وتحميل)
+- صلاحيات كاملة: المدير (إدارة المستخدمين)، المعلم (إدارة الدروس)
+- تصميم UI/UX عصري (Modern Glassmorphism)
 """
 
 import streamlit as st
 import pandas as pd
 import numpy as np
-import json
 import time
-from datetime import datetime, timedelta
-from typing import List, Dict
+import io
+from supabase import create_client, Client
+from typing import List, Dict, Optional
 
 # ==========================================
-# 1. CONFIGURATION & SETUP
+# 1. CONFIG & SECRETS
 # ==========================================
 
+# إعدادات الصفحة
 st.set_page_config(
-    page_title="المنصة التعليمية الذكية - الجزائر",
+    page_title="SmartEdu Algeria - Connected",
     page_icon="🇩🇿",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for Professional UI
+# الاتصال بـ Supabase
+# في Streamlit Cloud، ضع هذه القيم في قسم Secrets
+# في التطوير المحلي، يمكنك وضعها مباشرة للتجربة
+SUPABASE_URL = st.secrets.get("SUPABASE_URL", "YOUR_SUPABASE_URL_HERE")
+SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", "YOUR_SUPABASE_KEY_HERE")
+
+try:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    CONNECTION_STATUS = "🟢 متصل بقاعدة البيانات"
+except:
+    supabase = None
+    CONNECTION_STATUS = "🔴 خطأ في الاتصال (تحقق من المفاتيح)"
+
+# ==========================================
+# 2. ADVANCED UI STYLING (Glassmorphism)
+# ==========================================
+
 st.markdown("""
 <style>
-    /* Fonts & Base */
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;800&display=swap');
+    /* Font Import */
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;500;700;900&display=swap');
     
-    body {
-        font-family: 'Tajawal', sans-serif;
-        background-color: #f4f6f9;
-    }
-    
+    /* Global Styles */
     .stApp {
+        background-color: #f0f4f8;
+        font-family: 'Cairo', sans-serif;
         direction: rtl;
-        text-align: right;
-    }
-
-    /* Sidebar Styling */
-    .css-1d391kg {
-        background: linear-gradient(180deg, #006633 0%, #004d26 100%);
     }
     
-    .css-1d391kg a {
-        color: white !important;
-        font-weight: bold;
-        font-size: 1.1rem;
-    }
-
-    /* KPI Cards (Executive Style) */
-    .kpi-container {
-        display: flex;
-        gap: 20px;
+    /* Glassmorphism Cards */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.18);
         margin-bottom: 20px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     
-    .kpi-card {
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        flex: 1;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        border-right: 4px solid #006633;
-        transition: transform 0.3s;
-    }
-    
-    .kpi-card:hover {
+    .glass-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15);
     }
     
-    .kpi-title {
-        font-size: 0.9rem;
-        color: #666;
-        margin-bottom: 10px;
+    /* Sidebar Styling - Deep Gradient */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%);
+        color: white;
     }
     
-    .kpi-value {
-        font-size: 2rem;
-        font-weight: 800;
-        color: #333;
-    }
-    
-    .kpi-trend {
-        font-size: 0.8rem;
-        color: #00cc66; /* Green for growth */
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+        color: rgba(255, 255, 255, 0.8);
     }
 
-    /* Lesson Cards with Images */
-    .lesson-card {
-        background: white;
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 20px;
+    /* Primary Buttons */
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: bold;
+        font-size: 1rem;
+        transition: all 0.2s;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
     }
     
-    .lesson-card:hover {
+    .stButton > button[kind="primary"]:hover {
         transform: scale(1.02);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
     }
     
-    .lesson-img {
-        width: 100%;
-        height: 180px;
-        object-fit: cover;
-    }
-    
-    .lesson-content {
-        padding: 20px;
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .rating-stars {
-        color: #FFC107;
-        font-size: 1.2rem;
+    /* Danger Buttons (Delete) */
+    .stButton > button[kind="secondary"] {
+        background: #ef4444;
+        color: white;
+        border-radius: 12px;
     }
 
-    /* Gallery Grid */
-    .gallery-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 15px;
+    /* Metrics & KPIs */
+    [data-testid="stMetricValue"] {
+        font-family: 'Cairo', sans-serif;
+        font-weight: 800;
+        font-size: 2.5rem;
     }
     
-    .gallery-item {
-        position: relative;
-        border-radius: 10px;
-        overflow: hidden;
-        cursor: pointer;
+    /* Image containers */
+    .lesson-img-container {
+        width: 100%;
         height: 200px;
+        overflow: hidden;
+        border-radius: 15px;
+        margin-bottom: 15px;
+        position: relative;
     }
     
-    .gallery-item img {
+    .lesson-img-container img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.4s;
+        transition: transform 0.5s;
     }
     
-    .gallery-item:hover img {
+    .lesson-img-container:hover img {
         transform: scale(1.1);
     }
     
-    .overlay {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: rgba(0,0,0,0.6);
-        color: white;
-        padding: 10px;
-        font-size: 0.9rem;
-    }
-
-    /* Buttons */
-    .btn-gradient {
-        background: linear-gradient(45deg, #006633, #00cc66);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 25px;
+    /* Badges */
+    .badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
         font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(0, 102, 51, 0.3);
+        color: white;
+        display: inline-block;
     }
-    
-    /* Utilities */
-    .text-primary { color: #006633; }
-    .badge { padding: 5px 10px; border-radius: 12px; font-size: 0.8rem; color: white; }
-    .bg-math { background-color: #2196F3; }
-    .bg-science { background-color: #4CAF50; }
-    .bg-history { background-color: #FF9800; }
+    .badge-math { background: #3b82f6; }
+    .badge-science { background: #10b981; }
+    .badge-history { background: #f59e0b; }
+
+    /* Hide Default Streamlit Footer */
+    footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. MOCK DATA & DATABASE LAYER
+# 3. BACKEND LOGIC (Supabase Integration)
 # ==========================================
 
-class AdvancedDatabase:
-    """قاعدة بيانات غنية بالصور والمحتوى"""
+class DataManager:
+    """مدير البيانات للتعامل مع Supabase"""
     
-    def __init__(self):
-        self.users = [
-            {"id": 1, "username": "admin", "password": "1", "role": "مدير", "name": "مدير النظام", "avatar": "👨‍💼"},
-            {"id": 2, "username": "teacher", "password": "1", "role": "معلم", "name": "أستاذ محمد", "avatar": "👨‍🏫"},
-            {"id": 3, "username": "student", "password": "1", "role": "طالب", "name": "طالب مجتهد", "disability": "صم", "level": "ثانوي", "avatar": "🧑‍🎓"},
-        ]
-        
-        # دروس مع صور وعناوين جذابة
-        self.lessons = [
-            {
-                "id": 1, "title": "أساسيات التفاضل والتكامل", "subject": "رياضيات", "level": "ثانوي",
-                "image": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=500",
-                "rating": 4.8, "views": 1200, "difficulty": "متقدم", "tags": ["رسم بياني", "معادلات"],
-                "description": "تعلم كيفية حساب المشتقات والتكاملات بأسلوب بصري مبسط."
-            },
-            {
-                "id": 2, "title": "الطاقة الشمسية والاستدامة", "subject": "علوم", "level": "متوسط",
-                "image": "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=500",
-                "rating": 4.5, "views": 850, "difficulty": "متوسط", "tags": ["بيئة", "طاقة"],
-                "description": "اكتشف كيف تعمل الألواح الشمسية وأهميتها للبيئة."
-            },
-            {
-                "id": 3, "title": "ثورة نوفمبر المجيدة", "subject": "تاريخ", "level": "ثانوي",
-                "image": "https://images.unsplash.com/photo-1569074187119-c87815b476da?w=500",
-                "rating": 5.0, "views": 2100, "difficulty": "سهل", "tags": ["وطنية", "مقاومة"],
-                "description": "رحلة بصرية عبر تاريخ ثورة التحرير الجزائرية."
-            },
-            {
-                "id": 4, "title": "الجملة الفعلية في اللغة العربية", "subject": "لغة عربية", "level": "ابتدائي",
-                "image": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=500",
-                "rating": 4.2, "views": 600, "difficulty": "سهل", "tags": ["نحو", "قواعد"],
-                "description": "شرح مبسط مع أمثلة مرئية للجملة الفعلية."
-            },
-            {
-                "id": 5, "title": "علم الفلك النجوم", "subject": "علوم", "level": "ثانوي",
-                "image": "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=500",
-                "rating": 4.9, "views": 1500, "difficulty": "متقدم", "tags": ["فضاء", "كواكب"],
-                "description": "رحلة عبر الكون لفهم النظام الشمسي والمجرات."
-            }
-        ]
-        
-        self.gallery_images = [
-            "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=300",
-            "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=300",
-            "https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=300",
-            "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=300",
-            "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=300",
-            "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300"
-        ]
-        
-        self.analytics = {
-            "total_users": 1542,
-            "active_today": 230,
-            "lessons_completed": 8900,
-            "avg_score": 78.5,
-            "growth": "+12%"
-        }
-
-    def get_user(self, username, password):
-        for u in self.users:
-            if u['username'] == username and u['password'] == password:
-                return u
-        return None
-
-    def get_all_lessons(self):
-        return self.lessons
-
-    def get_gallery(self):
-        return self.gallery_images
-
-# ==========================================
-# 3. UI COMPONENTS & HELPERS
-# ==========================================
-
-def render_kpi_card(title, value, trend, icon, color="#006633"):
-    """رسم بطاقة KPI احترافية"""
-    st.markdown(f"""
-    <div class="kpi-card" style="border-right-color: {color}">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <div class="kpi-title">{title}</div>
-                <div class="kpi-value">{value}</div>
-                <div class="kpi-trend">{trend} <span style="font-size:1.2rem">📈</span></div>
-            </div>
-            <div style="font-size: 3rem; opacity: 0.8;">{icon}</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-def render_lesson_card(lesson, key):
-    """رسم بطاقة درس متقدمة مع صورة"""
-    bg_color = "bg-math" if lesson['subject'] == "رياضيات" else "bg-science" if lesson['subject'] == "علوم" else "bg-history"
+    def __init__(self, client: Client):
+        self.client = client
     
-    with st.container():
-        col1, col2 = st.columns([1, 2])
-        
-        with col1:
-            st.image(lesson['image'], use_column_width=True)
-        
-        with col2:
-            st.markdown(f"""
-            <span class="badge {bg_color}">{lesson['subject']}</span>
-            <span class="badge" style="background:gray; margin-right:5px;">{lesson['level']}</span>
-            """, unsafe_allow_html=True)
-            
-            st.subheader(lesson['title'])
-            st.markdown(f"<div class='rating-stars'>{'⭐' * int(lesson['rating'])} ({lesson['rating']}/5)</div>", unsafe_allow_html=True)
-            st.caption(lesson['description'])
-            
-            col_btn1, col_btn2, col_btn3 = st.columns(3)
-            
-            with col_btn1:
-                if st.button("👀 مشاهدة", key=f"watch_{key}", use_container_width=True):
-                    st.session_state['current_lesson'] = lesson
-                    st.session_state['page'] = 'lesson_detail'
-                    st.rerun()
-            
-            with col_btn2:
-                st.metric("المشاهدات", lesson['views'])
-            
-            with col_btn3:
-                rating = st.slider("قيم الدرس", 1, 5, key=f"rate_{key}", label_visibility="collapsed")
+    def login(self, username, password):
+        """المصادقة البسيطة (للأغراض التجريبية)"""
+        try:
+            response = self.client.table('users').select("*").eq('username', username).eq('password', password).execute()
+            if response.data:
+                return response.data[0]
+            return None
+        except Exception as e:
+            st.error(f"خطأ في قاعدة البيانات: {e}")
+            return None
 
-        st.markdown("---")
+    def get_all_users(self):
+        response = self.client.table('users').select("*").execute()
+        return response.data if response.data else []
+
+    def add_user(self, user_data):
+        try:
+            self.client.table('users').insert(user_data).execute()
+            return True
+        except Exception as e:
+            st.error(f"فشل الإضافة: {e}")
+            return False
+
+    def delete_user(self, user_id):
+        try:
+            self.client.table('users').delete().eq('id', user_id).execute()
+            return True
+        except Exception as e:
+            st.error(f"فشل الحذف: {e}")
+            return False
+
+    def get_lessons(self, subject_filter=None):
+        query = self.client.table('lessons').select("*")
+        if subject_filter:
+            query = query.eq('subject', subject_filter)
+        response = query.order('created_at', desc=True).execute()
+        return response.data if response.data else []
+    
+    def add_lesson(self, lesson_data, pdf_file=None):
+        try:
+            # 1. رفع ملف PDF إلى Supabase Storage إذا وجد
+            pdf_url = None
+            if pdf_file:
+                # ملاحظة: يجب إنشاء Bucket اسمه 'lessons' في Supabase يدوياً
+                try:
+                    file_name = f"{pdf_file.name}_{int(time.time())}"
+                    self.client.storage.from_('lessons').upload(file_name, pdf_file.read())
+                    # الحصول على رابط عام
+                    pdf_url = self.client.storage.from_('lessons').get_public_url(file_name)
+                except Exception as e:
+                    st.warning(f"تعذر رفع الملف، سيتم حفظ الدرس بدون PDF: {e}")
+            
+            # 2. حفظ بيانات الدرس
+            lesson_data['pdf_url'] = pdf_url
+            self.client.table('lessons').insert(lesson_data).execute()
+            return True
+        except Exception as e:
+            st.error(f"فشل إضافة الدرس: {e}")
+            return False
+
+    def delete_lesson(self, lesson_id):
+        try:
+            self.client.table('lessons').delete().eq('id', lesson_id).execute()
+            return True
+        except Exception as e:
+            st.error(f"فشل الحذف: {e}")
+            return False
 
 # ==========================================
-# 4. DASHBOARDS
+# 4. UI COMPONENTS & PAGES
 # ==========================================
 
-def show_login(db):
-    st.markdown("<h1 style='text-align: center; color: #006633;'>تسجيل الدخول للمنصة التعليمية</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #666;'>نظام تعليمي متكامل يدعم الصم والبكم والطلاب العاديين</p>", unsafe_allow_html=True)
+def show_login(db: DataManager):
+    st.markdown("<h1 style='text-align: center; color: #1e3a8a; margin-bottom: 2rem;'>تسجيل الدخول 🇩🇿</h1>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        with st.form("login"):
-            st.info("حسابات تجريبية:\n- مدير: admin / 1\n- معلم: teacher / 1\n- طالب: student / 1")
-            user_input = st.text_input("اسم المستخدم")
-            pass_input = st.text_input("كلمة المرور", type="password")
-            submitted = st.form_submit_button("دخول", use_container_width=True)
+        with st.form("login_form"):
+            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+            username = st.text_input("اسم المستخدم")
+            password = st.text_input("كلمة المرور", type="password")
+            st.markdown(f"<p style='text-align:center; color: #666;'>{CONNECTION_STATUS}</p>", unsafe_allow_html=True)
+            submitted = st.form_submit_button("دخول للنظام", use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
             
             if submitted:
-                user = db.get_user(user_input, pass_input)
+                user = db.login(username, password)
                 if user:
                     st.session_state['user'] = user
                     st.session_state['logged_in'] = True
-                    st.success(f"مرحباً بك {user['name']}")
+                    st.success(f"أهلاً بك {user['full_name']}")
                     time.sleep(0.5)
                     st.rerun()
                 else:
-                    st.error("خطأ في البيانات")
+                    st.error("اسم المستخدم أو كلمة المرور غير صحيحة")
 
-def admin_dashboard(db):
-    st.header("🛡️ لوحة القيادة التنفيذية (Executive Dashboard)")
-    
-    # Row 1: KPIs
-    st.markdown("<div class='kpi-container'>", unsafe_allow_html=True)
-    col1, col2, col3, col4 = st.columns(4)
-    with col1: render_kpi_card("إجمالي الطلاب", db.analytics['total_users'], db.analytics['growth'], "👥", "#2196F3")
-    with col2: render_kpi_card("النشاط اليومي", db.analytics['active_today'], "+5%", "⚡", "#FF9800")
-    with col3: render_kpi_card("الدروس المنجزة", db.analytics['lessons_completed'], "+22%", "📚", "#4CAF50")
-    with col4: render_kpi_card("متوسط الدرجات", f"{db.analytics['avg_score']}%", "+1.2%", "🏆", "#9C27B0")
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # Row 2: Charts
-    col_chart1, col_chart2 = st.columns([2, 1])
-    
-    with col_chart1:
-        st.subheader("📊 أداء الطلاب حسب المواد")
-        # Mock Chart Data
-        chart_data = pd.DataFrame({
-            'المادة': ['رياضيات', 'علوم', 'تاريخ', 'عربي', 'انجليزي'],
-            'الأداء': [85, 78, 92, 88, 70]
-        })
-        st.bar_chart(chart_data.set_index('المادة'), color="#006633")
-    
-    with col_chart2:
-        st.subheader("📈 نمو التسجيلات (آخر 6 أشهر)")
-        growth_data = pd.DataFrame({
-            'الشهر': ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
-            'عدد الطلاب': [100, 120, 150, 200, 230, 260]
-        })
-        st.line_chart(growth_data.set_index('الشهر'))
-    
-    # Row 3: Teacher Performance Table
-    st.subheader("👩‍🏫 تقييم المعلمين")
-    teacher_data = pd.DataFrame({
-        "المعلم": ["أ. محمد", "أ. سارة", "أ. أحمد"],
-        "المادة": ["رياضيات", "علوم", "لغة عربية"],
-        "تقييم الطلاب": [4.8, 4.5, 4.9],
-        "عدد الدروس": [12, 15, 10]
-    })
-    st.dataframe(teacher_data, use_container_width=True)
+def render_lesson_card(lesson, key):
+    with st.container():
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        
+        # Image Section
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            img_url = lesson.get('image_url', 'https://via.placeholder.com/300')
+            st.markdown(f'<div class="lesson-img-container"><img src="{img_url}"></div>', unsafe_allow_html=True)
+        
+        with col2:
+            # Tags & Badges
+            badge_color = "badge-math" if lesson['subject'] == "رياضيات" else "badge-science" if lesson['subject'] == "علوم" else "badge-history"
+            st.markdown(f"<span class='badge {badge_color}'>{lesson['subject']}</span> <span class='badge' style='background:#64748b'>{lesson['level']}</span>", unsafe_allow_html=True)
+            
+            st.subheader(lesson['title'])
+            st.caption(lesson.get('description', 'لا يوجد وصف'))
+            
+            # Action Buttons
+            col_btn1, col_btn2 = st.columns(2)
+            
+            with col_btn1:
+                if lesson.get('pdf_url'):
+                    # محاكاة تحميل الملف، في الواقع نستخدم الرابط
+                    st.markdown(f"""
+                    <a href="{lesson['pdf_url']}" target="_blank" style="
+                        text-decoration: none; 
+                        display: inline-block; 
+                        background: #3b82f6; 
+                        color: white; 
+                        padding: 8px 15px; 
+                        border-radius: 8px; 
+                        font-size: 0.9rem; 
+                        font-weight: bold;">
+                        📄 تحميل PDF
+                    </a>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.warning("لا يوجد ملف PDF")
+            
+            with col_btn2:
+                st.metric("المشاهدات", lesson['views'])
+                
+        st.markdown('</div>', unsafe_allow_html=True)
 
-def teacher_dashboard(db):
+def admin_dashboard(db: DataManager, user):
+    st.header("🛡️ لوحة تحكم المدير (Executive Admin)")
+    
+    # Admin: User Management
+    st.subheader("👥 إدارة المستخدمين")
+    users = db.get_all_users()
+    
+    with st.expander("إضافة مستخدم جديد"):
+        with st.form("add_user_form"):
+            c1, c2 = st.columns(2)
+            new_user = {
+                'username': c1.text_input("اسم المستخدم"),
+                'password': c1.text_input("كلمة المرور", type="password"),
+                'full_name': c2.text_input("الاسم الكامل"),
+                'role': c2.selectbox("الدور", ["طالب", "معلم", "مدير"]),
+                'disability_type': st.selectbox("نوع الإعاقة", DISABILITIES),
+                'level': st.selectbox("المستوى", ["ابتدائي", "متوسط", "ثانوي"])
+            }
+            if st.form_submit_button("إضافة مستخدم"):
+                if db.add_user(new_user):
+                    st.success("تمت الإضافة بنجاح")
+                    st.rerun()
+    
+    # User List with Delete Action
+    if users:
+        df = pd.DataFrame(users)
+        st.dataframe(df, use_container_width=True)
+        
+        # Delete Section
+        st.subheader("⚠️ حذف مستخدم")
+        user_to_delete = st.selectbox("اختر المستخدم للحذف", options=[f"{u['id']} - {u['full_name']}" for u in users])
+        if st.button("حذف نهائي", type="primary"):
+            uid = int(user_to_delete.split(' - ')[0])
+            if db.delete_user(uid):
+                st.success("تم الحذف")
+                st.rerun()
+
+def teacher_dashboard(db: DataManager, user):
     st.header("👨‍🏫 بوابة المعلم")
     
-    tab_teach, tab_students = st.tabs(["📝 إدارة المحتوى", "👥 متابعة الطلاب"])
+    tab_manage, tab_view = st.tabs(["إدارة الدروس", "معاينة الطلاب"])
     
-    with tab_teach:
-        col_left, col_right = st.columns([1, 2])
-        with col_left:
-            st.info("إضافة درس جديد")
+    with tab_manage:
+        # Teacher: Add Lesson with PDF
+        st.subheader("📂 رفع درس جديد")
+        with st.form("upload_lesson"):
             title = st.text_input("عنوان الدرس")
-            subject = st.selectbox("المادة", ["رياضيات", "علوم", "تاريخ"])
-            level = st.selectbox("المستوى", ["ابتدائي", "متوسط", "ثانوي"])
-            if st.button("نشر الدرس", use_container_width=True):
-                st.success("تم نشر الدرس بنجاح!")
-        
-        with col_right:
-            st.subheader("📂 مكتبة الدروس الحالية")
-            for l in db.lessons:
-                st.markdown(f"- **{l['title']}** ({l['subject']}) - ⭐ {l['rating']}")
-    
-    with tab_students:
-        st.subheader("تقارير أداء الطلاب")
-        # Mock Student List
-        students = [
-            {"name": "علي بن محمد", "progress": 80, "last_active": "منذ ساعة"},
-            {"name": "فاطمة الزهراء", "progress": 45, "last_active": "أمس"},
-            {"name": "ياسين براهيمي", "progress": 95, "last_active": "الآن"},
-        ]
-        
-        for s in students:
-            with st.container():
-                c1, c2, c3 = st.columns([2, 1, 1])
-                c1.write(f"🧑‍🎓 **{s['name']}**")
-                c2.progress(s['progress'])
-                c3.caption(s['last_active'])
-                st.divider()
-
-def student_dashboard(db, user):
-    # Hero Section
-    st.markdown(f"""
-    <div style="background: linear-gradient(135deg, #006633 0%, #004d26 100%); padding: 30px; border-radius: 20px; color: white; text-align: center; margin-bottom: 30px;">
-        <h1 style="margin: 0;">مرحباً بك في رحلتك التعليمية 🇩🇿</h1>
-        <p style="opacity: 0.9;">{user['name']} | المستوى: {user['level']} | نوع الحساب: {user['disability']}</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Navigation Tabs
-    tab_learn, tab_gallery, tab_progress = st.tabs(["🎓 الدروس والمقترحات", "🖼️ المعرض المرئي", "📊 تقدمي"])
-    
-    with tab_learn:
-        st.subheader("🌟 دروس مختارة لك")
-        lessons = db.get_all_lessons()
-        
-        # Search & Filter
-        col_search, col_filter = st.columns([3, 1])
-        with col_search: search = st.text_input("🔍 ابحث عن درس...", placeholder="مثال: تاريخ الجزائر")
-        with col_filter: subject_filter = st.selectbox("المادة", ["الكل"] + ["رياضيات", "علوم", "تاريخ", "لغة عربية"])
-        
-        # Rendering Cards
-        count = 0
-        for lesson in lessons:
-            if search and search.lower() not in lesson['title'].lower(): continue
-            if subject_filter != "الكل" and lesson['subject'] != subject_filter: continue
+            subject = st.selectbox("المادة", SUBJECTS)
+            level = st.selectbox("المستوى", LEVELS)
+            desc = st.text_area("وصف الدرس")
+            uploaded_pdf = st.file_uploader("اختر ملف PDF للدرس", type=['pdf'])
+            image_url = st.text_input("رابط الصورة الغلاف (اختياري)")
             
-            render_lesson_card(lesson, count)
-            count += 1
-    
-    with tab_gallery:
-        st.subheader("🖼️ معرض الصور التعليمية (Visual Gallery)")
-        st.caption("مكتبة صور توضيحية للطلاب الصم والبكم لتسهيل الفهم")
+            if st.form_submit_button("نشر الدرس", type="primary"):
+                lesson_data = {
+                    'title': title, 'subject': subject, 'level': level,
+                    'description': desc, 'image_url': image_url, 
+                    'rating': 0, 'views': 0, 'created_by': user['id']
+                }
+                if db.add_lesson(lesson_data, uploaded_pdf):
+                    st.success("تم رفع الدرس ونشره بنجاح!")
+                    st.rerun()
         
-        images = db.get_gallery()
-        cols = st.columns(3)
-        for i, img_url in enumerate(images):
-            with cols[i % 3]:
-                st.image(img_url, use_column_width=True, caption=f"صورة توضيحية {i+1}")
-    
-    with tab_progress:
-        st.subheader("📊 تقرير أدائي")
-        
-        # Charts for Student
-        c1, c2 = st.columns(2)
-        with c1:
-            st.metric("الدروس المكتملة", "12", "+2")
-            st.metric("ساعات الدراسة", "45 ساعة", "+5 ساعات")
-        
-        with c2:
-            st.metric("معدل التقييم", "4.7/5", "+0.2")
-            st.metric("نقاط الخبرة", "850 XP", "+50 XP")
-            
+        # Teacher: Delete Lessons
         st.divider()
-        st.write("تفاصيل التفاعل:")
-        activity_data = pd.DataFrame({
-            'النشاط': 'الدروس المقروءة', 'العدد': [12]
-        })
-        st.bar_chart(activity_data)
+        st.subheader("🗑️ حذف دروس")
+        lessons = db.get_lessons()
+        lesson_to_del = st.selectbox("اختر درس للحذف", [f"{l['id']} - {l['title']}" for l in lessons])
+        if st.button("حذف الدرس المختار", type="primary"):
+            lid = int(lesson_to_del.split(' - ')[0])
+            if db.delete_lesson(lid):
+                st.success("تم الحذف")
+                st.rerun()
 
-# ==========================================
-# 5. LESSON DETAIL VIEW (MODAL STYLE)
-# ==========================================
+    with tab_view:
+        st.write("إحصائيات الطلاب (قيد التطوير)...")
 
-def show_lesson_detail(lesson):
-    st.markdown(f"""
-    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
-        <div style="background: white; width: 80%; max-width: 800px; padding: 30px; border-radius: 20px; max-height: 90vh; overflow-y: auto; position: relative;">
-            <button onclick="document.querySelector('button[title=\'Close\']').click()" style="position: absolute; top: 15px; right: 15px; background: red; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">✕</button>
-            <h1 style="color: #006633;">{lesson['title']}</h1>
-            <img src="{lesson['image']}" style="width: 100%; border-radius: 15px; margin: 20px 0;">
-            
-            <h3>📝 وصف الدرس</h3>
-            <p>{lesson['description']}</p>
-            
-            <h3>🏷️ الوسوم</h3>
-            {', '.join(lesson['tags'])}
-            
-            <div style="margin-top: 30px; padding: 20px; background: #f0f8ff; border-radius: 10px; border: 1px dashed #006633;">
-                <h4>💬 منطق الذكاء الاصطناعي:</h4>
-                <p>بناءً على تفاعل السابق، نوصي بمشاهدة الفيديو أولاً ثم حل التمارين البصرية.</p>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Native Streamlit button to exit the "modal" state
-    if st.button("🔙 عودة للقائمة", key="exit_detail"):
-        st.session_state['page'] = 'student_dashboard'
-        st.session_state.pop('current_lesson', None)
-        st.rerun()
-
-# ==========================================
-# 6. MAIN APP LOOP
-# ==========================================
+# Constants
+LEVELS = ["ابتدائي", "متوسط", "ثانوي"]
+SUBJECTS = ["رياضيات", "علوم", "فيزياء", "لغة عربية", "تاريخ"]
+DISABILITIES = ["عادي", "صم", "ضعاف سمع"]
 
 def main():
     if 'logged_in' not in st.session_state:
         st.session_state['logged_in'] = False
-        st.session_state['page'] = 'login'
-
-    db = AdvancedDatabase()
     
+    if supabase:
+        db = DataManager(supabase)
+    else:
+        st.error("لا يمكن الاتصال بقاعدة البيانات. يرجى التحقق من الإعدادات.")
+        return
+
     # Sidebar Logic
     if st.session_state['logged_in']:
         with st.sidebar:
             user = st.session_state['user']
-            st.markdown(f"<h2 style='text-align: center; color: white;'>🎓 {user['name']}</h2>", unsafe_allow_html=True)
-            st.markdown(f"<p style='text-align: center; color: white; opacity: 0.8;'>{user['role']}</p>", unsafe_allow_html=True)
+            st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=100) # Generic logo
+            st.markdown(f"### {user['full_name']}")
+            st.markdown(f"**الدور:** {user['role']}")
             st.divider()
             
-            if st.button("🏠 الرئيسية"):
-                st.session_state['page'] = 'student_dashboard' if user['role'] == 'طالب' else 'admin_dashboard'
+            if st.button("🏠 الرئيسية", use_container_width=True):
                 st.rerun()
             
-            if st.button("🚪 خروج"):
+            if st.button("🚪 تسجيل الخروج", use_container_width=True):
                 st.session_state.clear()
                 st.rerun()
-    
+
     # Routing
     if not st.session_state['logged_in']:
         show_login(db)
     
-    elif st.session_state['page'] == 'lesson_detail' and 'current_lesson' in st.session_state:
-        show_lesson_detail(st.session_state['current_lesson'])
-    
     else:
         user = st.session_state['user']
-        if user['role'] == 'طالب':
-            student_dashboard(db, user)
+        if user['role'] == 'مدير':
+            admin_dashboard(db, user)
         elif user['role'] == 'معلم':
-            teacher_dashboard(db)
-        elif user['role'] == 'مدير':
-            admin_dashboard(db)
+            teacher_dashboard(db, user)
+        elif user['role'] == 'طالب':
+            st.header(f"مرحباً {user['full_name']} 🎓")
+            
+            # Student: View Lessons
+            subject_filter = st.selectbox("تصفية حسب المادة", ["الكل"] + SUBJECTS)
+            lessons = db.get_lessons(subject_filter if subject_filter != "الكل" else None)
+            
+            if not lessons:
+                st.info("لا توجد دروس حالياً.")
+            else:
+                for lesson in lessons:
+                    render_lesson_card(lesson, lesson['id'])
 
 if __name__ == "__main__":
     main()
