@@ -163,10 +163,12 @@ st.markdown("""
 # ==========================================
 
 def log_event(message, status="INFO"):
-    timestamp = datetime.datetime.now().strftime("%H:%M:%S")
-    entry = f"[{timestamp}] [{status}] {message}"
+# التحقق من وجود المفتاح، وإذا لم يكن موجوداً، قم بتهيئته
+    if 'logs' not in st.session_state:
+        st.session_state.logs = []
+    
+    # الآن يمكنك إضافة السجل بأمان
     st.session_state.logs.append(entry)
-
 # تهيئة البيانات الاحترافية
 if 'users' not in st.session_state:
     st.session_state.users = [
