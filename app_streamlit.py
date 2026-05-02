@@ -335,7 +335,7 @@ def show_student_dashboard():
     
     prog = len(st.session_state.progress) / len(st.session_state.lessons) * 100 if st.session_state.lessons else 0
     
-    tab1, tab2, tab3, tab4 = st.tabs(["الرئيسية", "📚 المكتبة", "📈 التقدم", "المساعد"])
+    tab1, tab2, tab3, tab4 = st.tabs(["الرئيسية", "📚 الدروس", "📈 التقدم", "المساعد"])
     
     with tab1:
         for ann in announcements_data:
